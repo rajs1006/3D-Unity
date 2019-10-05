@@ -61,7 +61,7 @@ public class SceneController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        cam = synth.getCamera();
+        cam = GetComponent<Camera>();
         if (frameCount < trainingImages + testImages)
         {
             Debug.Log($"save count {frameCount}");
