@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
@@ -32,7 +32,7 @@ public class CVMapping : MonoBehaviour
         Size size = mat.Size();
 
         if (null == outTexture || outTexture.width != size.Width || outTexture.height != size.Height)
-            Debug.Log($"outTexture {outTexture.width} : {size.Width}");
+        Debug.Log($"outTexture {outTexture.width} : {size.Width}");
         outTexture = new Texture2D(size.Width, size.Height, TextureFormat.RGBA32, false);
 
         int count = size.Width * size.Height;
@@ -59,7 +59,7 @@ public class CVMapping : MonoBehaviour
         var width = cam.pixelWidth;
         var height = cam.pixelHeight;
 
-        Debug.Log(" f " + f + "  sensor " + sensorSize + " : " + sx + " width/height " + width + "  :  " + height);
+        //Debug.Log(" f " + f + "  sensor " + sensorSize + " : " + sx + " width/height " + width + "  :  " + height);
 
         double[,] cameraMatrix = new double[3, 3]
         {
@@ -84,14 +84,14 @@ public class CVMapping : MonoBehaviour
         point3d_vec.Set<double>(2, obj.z);
         point3d_vec.Set<double>(3, 1);
 
-        Debug.Log($"projectionMatrix project3DPoints   : {projectionMatrix.Get<double>(0, 0)} {projectionMatrix.Get<double>(0, 1)} {projectionMatrix.Get<double>(0, 2)}");
+        Debug.Log($"projectionMatrix  : {projectionMatrix.Get<double>(0, 0)} {projectionMatrix.Get<double>(0, 1)} {projectionMatrix.Get<double>(0, 2)}");
         point2d_vec = cameraMatrixMat * projectionMatrix * point3d_vec;
 
         var X2D = point2d_vec.At<double>(0) / point2d_vec.At<double>(2);
         var Y2D = point2d_vec.At<double>(1) / point2d_vec.At<double>(2);
 
-        Debug.Log(" 3d Points " + obj.x + " " + obj.y + " " + obj.z);
-        Debug.Log(" 2d point  x : " + X2D + " y " + Y2D);
+        // Debug.Log(" 3d Points " + obj.x + " " + obj.y + " " + obj.z);
+        // Debug.Log(" 2d point  x : " + X2D + " y " + Y2D);
         //Debug.Log(" float 2d point  x : " + (float)X2D + " y " + (float)Y2D);
 
         Vector3 pnpPoints = new Vector3((float)X2D, (float)Y2D, 0.0f);
@@ -210,4 +210,3 @@ public class Color32Bytes
     public byte[] byteArray;
     public Color32[] colors;
 }
-

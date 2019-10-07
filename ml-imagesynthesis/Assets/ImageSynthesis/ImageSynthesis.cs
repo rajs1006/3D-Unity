@@ -1,7 +1,12 @@
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System;
+using System.Linq;
+
 using UnityEngine;
 using UnityEngine.Rendering;
 using System.Collections;
-using System.IO;
 using OpenCvSharp;
 using System.Runtime.InteropServices;
 // @TODO:
@@ -37,7 +42,6 @@ public class ImageSynthesis : MonoBehaviour
         public bool supportsAntialiasing;
         public bool needsRescale;
         public CapturePass(string name_) { name = name_; supportsAntialiasing = true; needsRescale = false; camera = null; }
-
         // impl
         public Camera camera;
     };
@@ -46,13 +50,21 @@ public class ImageSynthesis : MonoBehaviour
     public Shader uberReplacementShader;
     public Shader opticalFlowShader;
     public float opticalFlowSensitivity = 1.0f;
+    public int pythonConnectorPort;
+    public bool realTime = false;
 
     // cached materials
     private Material opticalFlowMaterial;
-
+    private PythonConnector pythonConnector;
 
     void Awake()
     {
+        pythonConnector = new PythonConnector();
+
+        if (realTime){
+            pythonConnector.start(pythonConnectorPort);
+        }
+
         // default fallbacks, if shaders are unspecified
         if (!uberReplacementShader)
             uberReplacementShader = Shader.Find("Hidden/UberReplacement");
@@ -159,7 +171,7 @@ public class ImageSynthesis : MonoBehaviour
 
     public void OnSceneChange()
     {
-        var renderers = Object.FindObjectsOfType<Renderer>();
+        var renderers = UnityEngine.Object.FindObjectsOfType<Renderer>();
         var mpb = new MaterialPropertyBlock();
         foreach (var r in renderers)
         {
@@ -173,13 +185,19 @@ public class ImageSynthesis : MonoBehaviour
         }
     }
 
+    public void stopExecution(){
+        if(realTime){
+            pythonConnector.close();
+        }
+    }
+
     public void PointAndPnP(Point2f[] imgPts, Point3f[] objPts)
     {
         openCV.pnp(objPts, imgPts, capturePasses[0].camera, SolvePnPFlags.EPNP);
         // Debug.Log($"projectionMatrix PointAndPnP   : {projectionMatrix.Get<double>(0,0)} {projectionMatrix.Get<double>(0,1)} {projectionMatrix.Get<double>(0,2)}");
     }
 
-    public void Save(Vector3[] transformed3dKeypoints, Bounds objBound, string filename, int width = -1, int height = -1, string path = "", bool saveOnlyImageAndLayer = false)
+    public void Save(Vector3[] transformed3dKeypoints, Bounds objBound, string filename, int width = -1, int height = -1, string path = "", bool saveOnlyImageAndLayer = false, bool control = false)
     {
         if (width <= 0 || height <= 0)
         {
@@ -196,33 +214,33 @@ public class ImageSynthesis : MonoBehaviour
 
         // execute as coroutine to wait for the EndOfFrame before starting capture
         StartCoroutine(
-            WaitForEndOfFrameAndSave(pathWithoutExtension, filenameExtension, width, height, saveOnlyImageAndLayer, transformed3dKeypoints, objBound));
+            WaitForEndOfFrameAndSave(pathWithoutExtension, filenameExtension, width, height, saveOnlyImageAndLayer, transformed3dKeypoints, objBound, control));
     }
 
-    private IEnumerator WaitForEndOfFrameAndSave(string filenameWithoutExtension, string filenameExtension, int width, int height, bool saveOnlyImageAndLayer, Vector3[] transformed3dKeypoints, Bounds objBound)
+    private IEnumerator WaitForEndOfFrameAndSave(string filenameWithoutExtension, string filenameExtension, int width, int height, bool saveOnlyImageAndLayer, Vector3[] transformed3dKeypoints, Bounds objBound, bool control)
     {
         yield return new WaitForEndOfFrame();
-        Save(filenameWithoutExtension, filenameExtension, width, height, saveOnlyImageAndLayer, transformed3dKeypoints, objBound);
+        Save(filenameWithoutExtension, filenameExtension, width, height, saveOnlyImageAndLayer, transformed3dKeypoints, objBound, control);
     }
 
-    private void Save(string filenameWithoutExtension, string filenameExtension, int width, int height, bool saveOnlyImageAndLayer, Vector3[] transformed3dKeypoints, Bounds objBound)
+    private void Save(string filenameWithoutExtension, string filenameExtension, int width, int height, bool saveOnlyImageAndLayer, Vector3[] transformed3dKeypoints, Bounds objBound, bool control)
     {
         if (saveOnlyImageAndLayer)
         {
             var passImg = capturePasses[0];
-            Save(passImg.camera, filenameWithoutExtension + passImg.name + filenameExtension, width, height, passImg.supportsAntialiasing, passImg.needsRescale, transformed3dKeypoints, objBound);
+            Save(passImg.camera, filenameWithoutExtension + passImg.name + filenameExtension, width, height, passImg.supportsAntialiasing, passImg.needsRescale, transformed3dKeypoints, objBound, control);
             //var passLayer = capturePasses[2];
             //Save(passLayer.camera, filenameWithoutExtension + passLayer.name + filenameExtension, width, height, passLayer.supportsAntialiasing, passLayer.needsRescale, mesharray);
         }
         else
         {
             foreach (var pass in capturePasses)
-                Save(pass.camera, filenameWithoutExtension + pass.name + filenameExtension, width, height, pass.supportsAntialiasing, pass.needsRescale, transformed3dKeypoints, objBound);
+                Save(pass.camera, filenameWithoutExtension + pass.name + filenameExtension, width, height, pass.supportsAntialiasing, pass.needsRescale, transformed3dKeypoints, objBound, control);
         }
     }
 
-    private void Save(Camera cam, string filename, int width, int height, bool supportsAntialiasing, bool needsRescale, Vector3[] transformed3dKeypoints, Bounds objBound)
-    {
+    private void Save(Camera cam, string filename, int width, int height, bool supportsAntialiasing, bool needsRescale, Vector3[] transformed3dKeypoints, Bounds objBound, bool control)
+    {//Debug.DrawLine(new Vector3(0,0,0), new Vector3(0,50,0), Color.black);
         //Debug.Log($"mesharray.Length {mesharray.Length}");
         var mainCamera = GetComponent<Camera>();
         var depth = 24;
@@ -257,44 +275,6 @@ public class ImageSynthesis : MonoBehaviour
         var tex = rTex.toTexture2D();
         Color32[] texC = tex.GetPixels32();
 
-        Mat camMat = new Mat(cam.pixelHeight, cam.pixelWidth, MatType.CV_8UC4, texC);
-        //System.Array.Reverse(texC);
-
-        int nKeyPoints = transformed3dKeypoints.Length;
-        if (nKeyPoints == 0)
-        {
-            nKeyPoints = 21;
-        }
-
-        KeyPoint[] keyPoints = openCV.getKeyPoints(camMat, nKeyPoints);
-
-        var keypointFileName = filename.Replace(Path.GetExtension(filename), "-ORB.txt");
-        using (TextWriter kpWriter = new StreamWriter(keypointFileName))
-        {
-            foreach (var k in keyPoints)
-            {
-                // In python, CNN, the Y-axis, is inverted and so height - Y
-                kpWriter.WriteLine(k.Pt.X + "," + (height - k.Pt.Y));
-            }
-            kpWriter.Flush();
-        }
-
-        if (transformed3dKeypoints.Length != 0)
-        {
-            Debug.Log($" nKe  {nKeyPoints}");
-            var groundTruthkeypointFileName = filename.Replace(Path.GetExtension(filename), "-GT.txt");
-            using (TextWriter gdKpWriter = new StreamWriter(groundTruthkeypointFileName))
-            {
-                foreach (var kp3D in transformed3dKeypoints)
-                {
-                    // In python, CNN, the Y-axis, is inverted and so height - Y
-                    Vector3 gdKeyPoints = openCV.project3DPoints(kp3D, cam);
-                    gdKpWriter.WriteLine(gdKeyPoints.x + "," + (height - gdKeyPoints.y));
-                }
-                gdKpWriter.Flush();
-            }
-        }
-
         var objBoundFileName = filename.Replace(Path.GetExtension(filename), "-BOUND.txt");
         using (TextWriter objBoundWriter = new StreamWriter(objBoundFileName))
         {
@@ -306,28 +286,104 @@ public class ImageSynthesis : MonoBehaviour
             objBoundWriter.Flush();
         }
 
+        int nKeyPoints = transformed3dKeypoints.Length;
+        if (nKeyPoints != 0)
+        {
 
-        Mat afterMat = new Mat();
-        Cv2.DrawKeypoints(camMat, keyPoints, afterMat, new Scalar(0, 0, 255), 0);
+            /**This is where we save the original image */
+             //System.Array.Reverse(texC);
+            Mat camMat = new Mat(cam.pixelHeight, cam.pixelWidth, MatType.CV_8UC4, texC);
+            var cTex = openCV.MatToTexture(camMat, tex);
+            // encode texture into PNG
+            var bytes = cTex.EncodeToPNG();
+            File.WriteAllBytes(filename, bytes);
 
-        var cTex = openCV.MatToTexture(camMat, tex);
-        var aTex = openCV.MatToTexture(afterMat, tex);
+            var gtKeyPoints = new System.Text.StringBuilder();
+            var groundTruthkeypointFileName = filename.Replace(Path.GetExtension(filename), ".txt");
+            using (TextWriter gdKpWriter = new StreamWriter(groundTruthkeypointFileName))
+            {
+                int i = 0;
+                foreach (var kp3D in transformed3dKeypoints)
+                {
+                    // In python, CNN, the Y-axis, is inverted and so height - Y
+                    Vector3 gdKeyPoints = openCV.project3DPoints(kp3D, cam);
 
-        // encode texture into PNG
-        var bytes = cTex.EncodeToPNG();
-        File.WriteAllBytes(filename, bytes);
+                    gtKeyPoints.AppendLine(gdKeyPoints.x + "," + (height - gdKeyPoints.y));
+                    gdKpWriter.WriteLine(gdKeyPoints.x + "," + (height - gdKeyPoints.y));
+                }
+                gdKpWriter.Flush();
+            }
+            
+            /**This is where we save the  image with keypoints */
+            Mat afterMat = new Mat();
 
-        var kpBytes = aTex.EncodeToPNG();
-        File.WriteAllBytes(filename.Replace(Path.GetExtension(filename), "-kp.png"), kpBytes);
+            KeyPoint[] keyPoints = openCV.getKeyPoints(camMat, nKeyPoints*10);
+            Cv2.DrawKeypoints(camMat, keyPoints, afterMat, new Scalar(0, 0, 255), 0);
 
+            var aTex = openCV.MatToTexture(afterMat, tex);
+            var kpBytes = aTex.EncodeToPNG();
+            File.WriteAllBytes(filename.Replace(Path.GetExtension(filename), "-ORB.png"), kpBytes);
+
+            var cvKeyPoints = new System.Text.StringBuilder();
+            var keypointFileName = filename.Replace(Path.GetExtension(filename), "-ORB.txt");
+            using (TextWriter kpWriter = new StreamWriter(keypointFileName))
+            {
+                foreach (var k in keyPoints)
+                {
+                    // In python, CNN, the Y-axis, is inverted and so height - Y
+                    cvKeyPoints.AppendLine(k.Pt.X + "," + (height - k.Pt.Y));
+                    kpWriter.WriteLine(k.Pt.X + "," + (height - k.Pt.Y));
+                }
+                kpWriter.Flush();
+            }
+
+            if(realTime){
+                
+                Mat cnnAfterMat = new Mat();
+                camMat.CopyTo(cnnAfterMat);
+
+                Point[] cnnKeyPoints = new Point[nKeyPoints];
+
+                pythonConnector.sendMore($"{Path.GetFullPath(filename)}", gtKeyPoints.ToString(), cvKeyPoints.ToString(), control);
+                string nnKeyPoints = pythonConnector.recieve();
+
+                string[] spearator = { "["," ","\n","]" };
+                var nnKPs = nnKeyPoints.Split(spearator, StringSplitOptions.RemoveEmptyEntries);
+
+                var cnnKeypointFileName = filename.Replace(Path.GetExtension(filename), "-CNN.txt");
+                using (TextWriter cnnKpWriter = new StreamWriter(cnnKeypointFileName))
+                {
+                    for(int i=0; i < nnKPs.Length ; i = i+2){
+                        //Debug.Log($"k  : {nnKPs[i]} : {nnKPs[i+1]}");
+                        cnnKeyPoints[i/2].X = (int)Math.Round(float.Parse(nnKPs[i]));
+                        cnnKeyPoints[i/2].Y = height - (int)Math.Round(float.Parse(nnKPs[i + 1]));
+
+                        cnnKpWriter.WriteLine(nnKPs[i] + "," + nnKPs[i + 1]);
+                    }
+                    cnnKpWriter.Flush();
+                }
+
+                for(int p=0; p<cnnKeyPoints.Length - 1 ; p++){
+                    for (int j=p; j<p+2 ; j = j+2){
+                        //Debug.Log($"drwaing line...{cnnKeyPoints[j]}  {cnnKeyPoints[j+1]}");
+                        Cv2.Line(cnnAfterMat, cnnKeyPoints[j],cnnKeyPoints[j+1], new Scalar(0, 0, 255));
+                    }
+                }
+
+                Debug.Log($"cnnKeyPoints  : {cnnKeyPoints[1]}");
+
+                var cnnTex = openCV.MatToTexture(cnnAfterMat, tex);
+                var cnnBytes = cnnTex.EncodeToPNG();
+                File.WriteAllBytes(filename.Replace(Path.GetExtension(filename), "-CNN.png"), cnnBytes);
+            }
+        }
+        
         cam.targetTexture = prevCameraRT;
         RenderTexture.active = prevActiveRT;
 
-        Object.Destroy(tex);
+        UnityEngine.Object.Destroy(tex);
         RenderTexture.ReleaseTemporary(finalRT);
     }
-
-
 
 
 #if UNITY_EDITOR

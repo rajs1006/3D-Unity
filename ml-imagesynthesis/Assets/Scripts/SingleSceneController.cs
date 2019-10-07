@@ -11,10 +11,12 @@ using OpenCvSharp;
 public class SingleSceneController : MonoBehaviour
 {
     public ImageSynthesis synth;
+
     public GameObject cadObj;
     public SampleCountController count;
-    public bool saveImg = false;
     public bool first = false;
+    public bool control = false;
+
 
     private int frameCount = 0;
     private int trainingImages;
@@ -26,13 +28,12 @@ public class SingleSceneController : MonoBehaviour
     private TextWriter tw;
     private Point2f[] imgPts;
     private Point3f[] objPts;
+    private string gtKpFile = "captures/GroundTruth/image_groundtruth_img-GT.txt";
     private int kpLen = 21;
 
     // Start is called before the first frame update
     void Start()
     {
-
-        string gtKpFile = "captures/GroundTruth/image_groundtruth_img-GT.txt";
 
         var height = Camera.main.pixelHeight;
         var width = Camera.main.pixelWidth;
@@ -43,8 +44,6 @@ public class SingleSceneController : MonoBehaviour
 
         initPos = cadObj.transform.position;
         initRot = cadObj.transform.rotation;
-
-        Debug.Log("initPos : " + initPos + "  initRot : " + initRot);
 
         if (first)
         {
@@ -65,12 +64,13 @@ public class SingleSceneController : MonoBehaviour
             {
                 string[] c = l.Split(spearator, StringSplitOptions.RemoveEmptyEntries);
 
-                Debug.Log($"lines  : {c[0]} {c[1]} {c[2]} {c[3]} {c[4]} {c[5]}");
+                //Debug.Log($"lines  : {c[0]} {c[1]} {c[2]} {c[3]} {c[4]} {c[5]}");
                 imgPts[i] = new Point2f(float.Parse(c[0]), float.Parse(c[1]));
                 objPts[i] = new Point3f(float.Parse(c[3]), float.Parse(c[4]), float.Parse(c[5]));
                 i++;
             }
             synth.PointAndPnP(imgPts, objPts);
+
         }
     }
 
@@ -80,10 +80,9 @@ public class SingleSceneController : MonoBehaviour
         if (first)
         {
 
-            if (saveImg && frameCount == 0)
+            if (frameCount == 0)
             {
                 synth.Save(new Vector3[0], cadObj.GetComponent<Collider>().bounds, "image_groundtruth", width, height, "captures/GroundTruth", true);
-                frameCount++;
             }
 
             if (Input.GetMouseButtonDown(0))
@@ -116,35 +115,45 @@ public class SingleSceneController : MonoBehaviour
         else
         {
 
-            if (frameCount < trainingImages + testImages)
+            string folder = "captures/";
+            string filename = $"image_{frameCount.ToString().PadLeft(5, '0')}";
+
+            Vector3[] transformedObjPoints = transformCADObject();
+            Bounds objBound = cadObj.GetComponent<Collider>().bounds;
+
+            if (control)
             {
-                Debug.Log($"save count {frameCount}");
-
-                Vector3[] transformedObjPoints = transformCADObject();
-                Bounds objBound = cadObj.GetComponent<Collider>().bounds;
-
-                if (saveImg)
+                if (frameCount < trainingImages)
                 {
-                    if (frameCount < trainingImages)
-                    {
-                        string filename = $"image_{frameCount.ToString().PadLeft(5, '0')}";
-                        synth.Save(transformedObjPoints, objBound, filename, width, height, "captures/Train", true);
-                    }
-                    else
-                    {
-                        int testFrameCount = frameCount - trainingImages;
-                        string filename = $"image_{testFrameCount.ToString().PadLeft(5, '0')}";
-                        synth.Save(transformedObjPoints, objBound, filename, width, height, "captures/Test", true);
-                    }
+                    folder = folder + "Train";
+                    //Debug.Log($" Parameters : {folder} {filename} {control}");
+                    synth.Save(transformedObjPoints, objBound, filename, width, height, folder, true, control);
                 }
-                frameCount++;
+                else
+                {
+                    // Pause the application after completion of data generation.
+                    Debug.Break();
+                    //synth.stopExecution();
+                }
             }
             else
             {
-                // Pause the application after completion of data generation.
-                Debug.Break();
+                if (frameCount < testImages)
+                {
+                    folder = folder + "Test";
+                    //Debug.Log($" Parameters : {folder} {filename} {control}");
+                    synth.Save(transformedObjPoints, objBound, filename, width, height, folder, true, control);
+                }
+                else
+                {
+                    Debug.Log(" CLosinf");
+                    // Pause the application after completion of data generation.
+                    Debug.Break();
+                    //synth.stopExecution();
+                }
             }
         }
+        frameCount++;
     }
 
     private Vector3[] transformCADObject()
@@ -160,7 +169,6 @@ public class SingleSceneController : MonoBehaviour
         var newRot = Quaternion.Euler(0, UnityEngine.Random.Range(-180, 180), 0);
 
         cadObj.transform.position = initPos - newPosition;
-        Debug.Log($"2d scale {Camera.main.WorldToScreenPoint(cadObj.transform.position)}  {cadObj.transform.lossyScale}");
         //cadObj.transform.rotation = newRot * initRot;
 
         Vector3[] transformedObjPoints = new Vector3[kpLen];
