@@ -32,25 +32,26 @@ public class BackgroundColorControler : MonoBehaviour
     {
         if (frameCount < trainingImages + testImages)
         {
-            // foreach (var mat in materials)
-            // {
-                //if (frameCount % 2 == 0 && string.Compare(mat.name, backgroundMaterialName) == 0)
-                //{
-                    //rend.material = mat;
+            foreach (var mat in materials)
+            {
+                Debug.Log($"mat.name {mat.name}");
+                if (frameCount % 2 == 0 && string.Compare(mat.name, backgroundMaterialName) == 0)
+                {
+                    rend.material = mat;
                     //Set the main Color of the Material to random
                     rend.material.SetColor("_Color", new Color(Random.Range(0.0f, 1.0f), Random.Range(0.0f, 1.0f), Random.Range(0.0f, 1.0f)));
                     rend.material.SetFloat("_Metallic", Random.Range(0.2f, 1.0f));
                     rend.material.SetFloat("_Glossiness", Random.Range(0.2f, 1.0f));
                     //Debug.Log($"Changin background color");
-                //}
-                //else if (frameCount % 2 != 0 && string.Compare(mat.name, textureMaterialName) == 0)
-                //{
-                //    Material textureMaterial = mat;
-                 //   textureMaterial.mainTexture = textures[Random.Range(0, textures.Length)];
-                 //   rend.material = textureMaterial;
+                }
+                else if (frameCount % 2 != 0 && string.Compare(mat.name, textureMaterialName) == 0)
+                {
+                   Material textureMaterial = mat;
+                   textureMaterial.mainTexture = textures[Random.Range(0, textures.Length)];
+                   rend.material = textureMaterial;
 
-                //}
-           // }
+                }
+           }
             frameCount++;
         }
     }

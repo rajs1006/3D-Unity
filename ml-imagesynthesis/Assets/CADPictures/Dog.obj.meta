@@ -8,7 +8,7 @@ ModelImporter:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: Dog_bodyMat
-    second: {fileID: 2100000, guid: 0c359b9cdef59ea8eb654966d7efae08, type: 2}
+    second: {fileID: 2100000, guid: 4b47291c5295565f78c8030edf1ced2b, type: 2}
   materials:
     importMaterials: 1
     materialName: 0

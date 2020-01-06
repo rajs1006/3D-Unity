@@ -8,9 +8,9 @@ public class Importer : MonoBehaviour
     void Start()
     {
         ObjImporter newMesh = new ObjImporter();
-        Mesh holderMesh = newMesh.ImportFile("/home/sourabh/Documents/TU-Berlin/Thesis/Sytheticdata/ml-imagesynthesis/Assets/CADPictures/Dog.obj");
+        Mesh holderMesh = newMesh.ImportFile("/home/sourabh/Documents/TU-Berlin/Thesis/Sytheticdata/ml-imagesynthesis/Assets/CADPictures/PandaMale.obj");
 
-        MeshSaver.SaveMesh(holderMesh, "DMU_50_EVO_LINEAR");
+        MeshSaver.SaveMesh(holderMesh, "PandaMale");
     }
 
     // Update is called once per frame

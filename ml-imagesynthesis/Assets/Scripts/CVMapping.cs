@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
+using System;
 using OpenCvSharp;
 using System.Runtime.InteropServices;
 
@@ -67,7 +68,7 @@ public class CVMapping : MonoBehaviour
             { 0, (height*f)/sy, height/2 },
             { 0, 0, 1}
         };
-
+        // Debug.Log($"cameraMatrix {(width*f)/sx}  {width/2} {(height*f)/sy} {height/2} ");
         return cameraMatrix;
     }
 
@@ -84,16 +85,10 @@ public class CVMapping : MonoBehaviour
         point3d_vec.Set<double>(2, obj.z);
         point3d_vec.Set<double>(3, 1);
 
-        Debug.Log($"projectionMatrix  : {projectionMatrix.Get<double>(0, 0)} {projectionMatrix.Get<double>(0, 1)} {projectionMatrix.Get<double>(0, 2)}");
         point2d_vec = cameraMatrixMat * projectionMatrix * point3d_vec;
-
+        
         var X2D = point2d_vec.At<double>(0) / point2d_vec.At<double>(2);
         var Y2D = point2d_vec.At<double>(1) / point2d_vec.At<double>(2);
-
-        // Debug.Log(" 3d Points " + obj.x + " " + obj.y + " " + obj.z);
-        // Debug.Log(" 2d point  x : " + X2D + " y " + Y2D);
-        //Debug.Log(" float 2d point  x : " + (float)X2D + " y " + (float)Y2D);
-
         Vector3 pnpPoints = new Vector3((float)X2D, (float)Y2D, 0.0f);
 
         return pnpPoints;
@@ -101,6 +96,8 @@ public class CVMapping : MonoBehaviour
 
     public void pnp(Point3f[] objPts, Point2f[] imgPts, Camera cam, SolvePnPFlags type)
     {
+
+        Vector3 rot = new Vector3();
 
         Debug.Log($" PNP   : {objPts.Length} : {imgPts.Length}");
         using (var objPtsMat = new Mat(objPts.Length, 1, MatType.CV_32FC3, objPts))
@@ -117,6 +114,8 @@ public class CVMapping : MonoBehaviour
             Mat rot_matrix = Mat.Zeros(3, 3, MatType.CV_64FC1);
             Mat tr_matrix = Mat.Zeros(3, 1, MatType.CV_64FC1);
             Mat proj_matrix = Mat.Zeros(3, 4, MatType.CV_64FC1);
+
+            rot = new Vector3(rvecMat.At<float>(0), rvecMat.At<float>(1), rvecMat.At<float>(2));
 
             Cv2.Rodrigues(rvecMat, rot_matrix);
             tr_matrix = tvecMat;
@@ -137,8 +136,32 @@ public class CVMapping : MonoBehaviour
             proj_matrix.Set<double>(1, 3, tr_matrix.At<double>(1));
             proj_matrix.Set<double>(2, 3, tr_matrix.At<double>(2));
 
+            rot = eulerAngle(rot_matrix);
+            
+            // Debug.Log($"1  : Matrix4x4.TRS(translation, rotation, scale) {Matrix4x4.TRS(cam.transform.position, cam.transform.rotation, new Vector3(10, 10, 10))}");
+            // Debug.Log($"1  : Matrix4x4.TRS(translation, rotation, scale) {Matrix4x4.TRS(cam.transform.position, cam.transform.rotation, new Vector3(10, 10, 10))}");
+
+            Debug.Log($"rot1 {cam.transform.eulerAngles} rot2 { rot * Mathf.Rad2Deg}");
+            Debug.Log($"tr1: {cam.transform.position} tr2: {tr_matrix.At<double>(0)}, {tr_matrix.At<double>(1)}, {tr_matrix.At<double>(2)}");
             projectionMatrix = proj_matrix;
         }
+    }
+
+
+    private Vector3 eulerAngle(Mat R){
+        float sy = (float)Math.Sqrt(R.At<double>(2,1) * R.At<double>(2,1) +  R.At<double>(2,2) * R.At<double>(2,2) );
+ 
+        bool singular = sy < 1e-6; // If
+    
+        float x, y, z;
+        
+        x = (float)Math.Atan2(R.At<double>(2,1) , R.At<double>(2,2));
+        y = (float)Math.Atan2(-R.At<double>(2,0), sy);
+        z = (float)Math.Atan2(R.At<double>(1,0), R.At<double>(0,0));
+        
+        Debug.Log($"rot 0 : {x}, {y} {z}");
+        return new Vector3(x, y, z);
+
     }
 
     public Vector2[] screenScaleOfObject(Bounds objBound, Camera cam)

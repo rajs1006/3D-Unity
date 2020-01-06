@@ -20,8 +20,6 @@ public class PythonConnector
 
         client = new RequestSocket();
         client.Connect(ServerEndpoint);
-        //client.Options.Linger = TimeSpan.Zero;
-        //client.ReceiveReady += ClientOnReceiveReady;
     }
 
     // Update is called once per frame

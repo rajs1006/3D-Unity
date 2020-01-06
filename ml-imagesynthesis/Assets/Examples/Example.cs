@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 public class Example : MonoBehaviour
 {
 
-    public ImageSynthesis synth;
+    //public ImageSynthesis synth;
 
     public Boolean first =  false;
     private TextWriter tw;
@@ -28,11 +28,6 @@ public class Example : MonoBehaviour
     void Start()
     {
     
-        // MeshFilter filter = g.GetComponent<MeshFilter>();
-        // Vector3[] mesh = filter.mesh.vertices;
-        // Vector3[] normal = filter.mesh.normals;
-        // Debug.Log($"  Mesh {filter.mesh.name}  :  {mesh.Length} : {normal.Length}");
-
         Debug.Log("projection : " + Camera.main.projectionMatrix);
 
         var f = Camera.main.focalLength;
@@ -83,7 +78,7 @@ public class Example : MonoBehaviour
 
         if(first){
 
-            if(Input.GetMouseButton(0)){
+            if(Input.GetMouseButtonDown(0)){
 
                 Vector3  mFar = new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.farClipPlane);
                 Vector3  mNear = new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.nearClipPlane);
@@ -96,8 +91,20 @@ public class Example : MonoBehaviour
                 RaycastHit hit;
                 
                 if(Physics.Raycast(mousePosN,  mousePosF-mousePosN, out hit)) {
-                //Debug.Log($"hit.point {hit.point}  WorldToScreenPoint(hit.point) {Camera.main.WorldToScreenPoint(hit.point)} hit.transform.position {hit.transform.position} object.position {hit.point - hit.transform.position}");
+                    Debug.Log($"hit.point {hit.point}  WorldToScreenPoint(hit.point) {Camera.main.WorldToScreenPoint(hit.point)}");
                     Debug.Log($"Point3D {hit.point}  :  Point2D {Input.mousePosition} ");
+
+                    var initRot = g.transform.rotation;
+
+                    Vector3 v =  new Vector3(1,0,0);
+                    var rot = Quaternion.Euler(0, 45, 0);
+
+                    Debug.Log($"Init sample Rotated Point3D {rot * initRot * v}  :  Point2D {Camera.main.WorldToScreenPoint(rot * initRot * v)} ");
+                    Debug.Log($"sample Rotated Point3D {rot * v}  :  Point2D {Camera.main.WorldToScreenPoint(rot * v)} ");
+                
+                    g.transform.rotation = rot * initRot;
+                    var rotP = rot * hit.point;
+                    Debug.Log($"Rotated Point3D {rotP}  :  Point2D {Camera.main.WorldToScreenPoint(rotP)} ");
 
                     PointAndPnP(Input.mousePosition, hit.point);
                     Vector3 pnpPoints = project3DPoints(hit.point);
@@ -219,143 +226,6 @@ public class Example : MonoBehaviour
         pnp(objPts, imgPts, cameraMatrix, SolvePnPFlags.Iterative);
     }
 
-
-    private void Save(Camera cam, string filename, int width, int height, bool supportsAntialiasing, bool needsRescale)
-	{
-		//Debug.Log($"mesharray.Length {mesharray.Length}");
-		//var mainCamera = GetComponent<Camera>();
-		var depth = 24;
-		var format = RenderTextureFormat.Default;
-		var readWrite = RenderTextureReadWrite.Default;
-		var antiAliasing = (supportsAntialiasing) ? Mathf.Max(1, QualitySettings.antiAliasing) : 1;
-
-		var finalRT =
-			RenderTexture.GetTemporary(width, height, depth, format, readWrite, antiAliasing);
-		var renderRT = (!needsRescale) ? finalRT :
-			RenderTexture.GetTemporary(cam.pixelWidth, cam.pixelHeight, depth, format, readWrite, antiAliasing);
-		//var tex = new Texture2D(width, height, TextureFormat.RGB24, false);
-
-		var prevActiveRT = RenderTexture.active;
-		var prevCameraRT = cam.targetTexture;
-		var rTex = renderRT;
-		// render to offscreen texture (readonly from CPU side)
-		RenderTexture.active = renderRT;
-		cam.targetTexture = renderRT;
-		
-		cam.Render();
-
-		if (needsRescale)
-		{
-			// blit to rescale (see issue with Motion Vectors in @KNOWN ISSUES)
-			RenderTexture.active = finalRT;
-			Graphics.Blit(renderRT, finalRT);
-			rTex = finalRT;
-			RenderTexture.ReleaseTemporary(renderRT);
-		}
-
-		var tex = rTex.toTexture2D();
-        Color32[] texC = tex.GetPixels32();
-	    //System.Array.Reverse(texC);
-		// encode texture into PNG
-		//var bytes = tex.EncodeToPNG();
-        //Cv2.ImWrite("keypoints", bytes);
-
-		//brisk = BRISK.Create();
-		//fast  = FastFeatureDetector.Create(30);
-        Mat camMat = new Mat(cam.pixelHeight, cam.pixelWidth, MatType.CV_8UC4, texC);
-    
-        KeyPoint[] keyPoints = null;
-        Debug.Log("keypoint detectin started");
-        Mat afterMat= new Mat();
-        keyPoints = orb.Detect(camMat);
-        Debug.Log("keypoint detected");
-		// int len = keyPoints.Length;
-
-		// Point2f[] imgPts = new Point2f[len];
-		// Point3f[] objPts = new Point3f[len];
-
-		// int i  = 0;
-		
-		// var keypointFileName = filename.Replace(Path.GetExtension(filename), ".txt");
-		// using(TextWriter tw = new StreamWriter(keypointFileName))
-		// {
-		// 	foreach (var k in keyPoints)
-		// 	{
-
-		// 		//Vector2 p = new Vector2(k.Pt.X, k.Pt.Y);
-		// 		// In python, CNN, the Y-axis, is inverted and so height - Y
-		// 		tw.WriteLine(k.Pt.X + "," + (height - k.Pt.Y));
-
-		// 		Vector3  mFar = new Vector3(k.Pt.X, k.Pt.Y, cam.farClipPlane);
-		// 		Vector3  mNear = new Vector3(k.Pt.X, k.Pt.Y, cam.nearClipPlane);
-
-		// 		Vector3 mousePosF = cam.ScreenToWorldPoint(mFar);
-		// 		Vector3 mousePosN = cam.ScreenToWorldPoint(mNear);
-
-		// 		Debug.DrawRay(mousePosN, mousePosF-mousePosN, Color.green);
-
-		// 		RaycastHit hit;
-
-		// 		if(Physics.Raycast(mousePosN,  mousePosF-mousePosN, out hit)) {
-		// 			Debug.Log($"hit.point {hit.point}  hit.transform.position {hit.transform.position} hit.transform.name {hit.transform.name}");
-		// 		}
-
-		// 		Point2f points2D = k.Pt;
-		// 		Vector3 points3D = (hit.point - hit.transform.position);
-				
-		// 		imgPts[i] = points2D;
-		// 		objPts[i] = new Point3f(points3D.x, points3D.y, points3D.z);
-		// 		i++;
-
-		// 		Debug.Log("Keypoint screen position "+ points2D + "and changed calculated screen point "+ cam.WorldToScreenPoint(hit.point));
-		// 		Debug.Log("Object world position "+ points3D);
-				
-		// 	}
-		// }
-
-        // Cv2.DrawKeypoints(camMat, keyPoints, afterMat, new Scalar(0, 0, 255), 0);
-
-		// //Debug.Log($"AFTER MAT size : {afterMat.Size()}");
-		// //Cv2.ImShow("keyPoints1", afterMat);
-        // //Debug.Log($"afterMat done");
-        // var cTex = MatToTexture(camMat, tex);
-		// var aTex = MatToTexture(afterMat, tex);
-
-		// // encode texture into PNG
-		// var bytes = cTex.EncodeToPNG();
-		// File.WriteAllBytes(filename, bytes);	
-
-		// var abytes = aTex.EncodeToPNG();
-		// File.WriteAllBytes(filename.Replace(Path.GetExtension(filename), "-kp.png"), abytes);
-
-		cam.targetTexture = prevCameraRT;
-		RenderTexture.active = prevActiveRT;
-
-		UnityEngine.Object.Destroy(tex);
-		RenderTexture.ReleaseTemporary(finalRT);
-	}
-
-
-    private Texture2D MatToTexture(Mat mat, Texture2D outTexture = null)
-    {
-        Size size = mat.Size();
-        
-        if (null == outTexture || outTexture.width != size.Width || outTexture.height != size.Height)
-            Debug.Log($"outTexture {outTexture.width} : {size.Width}");
-            outTexture = new Texture2D(size.Width, size.Height, TextureFormat.RGBA32, false);
-
-        int count = size.Width * size.Height;
-        Color32Bytes data = new Color32Bytes();
-        data.byteArray = new byte[count * 4];
-        data.colors = new Color32[count];
-        Marshal.Copy(mat.Data, data.byteArray, 0, data.byteArray.Length);
-        outTexture.LoadRawTextureData(data.byteArray);
-        //outTexture.SetPixels32(data.colors);
-        outTexture.Apply();
-
-        return outTexture;
-        
-    }
 
     void pnp(Point3f[] objPoints, Point2f[] imgPts,double[, ] cameraMatrix, SolvePnPFlags type){
 

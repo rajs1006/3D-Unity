@@ -1,0 +1,290 @@
+fileFormatVersion: 2
+guid: 28fbd6fe3b029295b85753a323267876
+ModelImporter:
+  serializedVersion: 27
+  internalIDToNameTable: []
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group10391_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: e4e9c6c14b8b7a739a94ffb067babaf6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group11_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: daacd64a841998682908657db8cf4a58, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group21_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: 3a67af024fd629aedbc8cb4a05470930, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group22065_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: 025b5e2b5e9b22dcbad6e6af1d6eb151, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group22_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: 3eae964ab25e1c9d284690a20316fb33, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group23_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: 91ed8f876f5562c00a709f1d1bbc02ea, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group24_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: 08b9e8be98ca9a216949dc3bbab4b226, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group25_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: eda6f6eb70f9a0279b446fcdb7d86c8f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group26_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: 6a600810b76ca5272b53a8e4d4101317, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group275_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: 0a043568eddbe04eca0456543ebd05c4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group27_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: 995a29c18b8caf9d6ad2beffc20c609e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group28_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: a8d28b7ede2b9e5aca785dd4c4b44e95, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group29525_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: 77dcc0f24b34ba815af69cb8e1a0a4bc, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group29_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: 42f2c38d8a6f6f74a985bc5348823caa, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group305_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: eca4805dc477f4d79ad1194786b8ad3e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group32328_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: a215990ca827c4cb9bb9a5862054ec9e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group32341_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: 02e1d4d33ee56c08abb0fe0004649d21, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group33_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: 8d337ae2c38ac894e8e97901e3836ac0, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group34_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: 280926b140b19e74f8c6fce6f3db9fd3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group35089_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: 5e06bd80d579f0a75b1875700bce825a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group35_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: fde9bc83a861e644398b320099fda789, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group36_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: d88209d6221c2cd97aada925a93eab4a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group37_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: fd0443d028f31090cbf8a2e8570dad4f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group38_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: 78782411d7af62cd3bb0d6474a43d4f6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group42_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: bb6b71718127b4e628693b788359b9a5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group43_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: 6050480c5c64a73d5a5736c7a0e03df2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group44_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: 807e3a30add56a2ac925aa2877e4459b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group45_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: b998e006cfcd998f680a7d2496f4e897, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group46_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: 318d3bc2735f5676e9771dfa37063107, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group48_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: 16add7e1e3d1bfe68af873fab8b30ea4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group50_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: ae222b78987ca9ee88599bc317db1d6e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group51932_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: 058a5c39186399389b0bdfde088376e8, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group51_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: 8760e882375ad9a48a12eccd3d3594a1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group52_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: c1141ce0c168faeb8816012b1e4c686e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group53_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: 55bcd9bee10adce1ca9aa29e903c7587, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group54_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: 1601c936f7f00912990e63196dcd732a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group55_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: b65b83a4f5ec41e7e84818db881c6926, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group57688_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: 587a0bc0a219c3dd2a5fb6fc4a7e7295, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: H_M_A_nickZ_L4_Group5_H_M_A_nickZ_L4_polySurface1Mat
+    second: {fileID: 2100000, guid: 1748dad57dbcec39c8e26333548e5455, type: 2}
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 0
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    keepQuads: 0
+    weldVertices: 1
+    preserveHierarchy: 0
+    skinWeightsMode: 0
+    maxBonesPerVertex: 4
+    minBoneWeight: 0.001
+    meshOptimizationFlags: -1
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+  referencedClips: []
+  importAnimation: 1
+  humanDescription:
+    serializedVersion: 3
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    globalScale: 1
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 2
+  humanoidOversampling: 1
+  avatarSetup: 0
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -1,231 +1,318 @@
-﻿
-
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using OpenCvSharp;
 using System.IO;
-using System.Runtime.InteropServices;
+using System;
+using System.Linq;
 
-public class SceneController : MonoBehaviour
+using UnityEngine;
+using UnityEngine.UI;
+using OpenCvSharp;
+using OpenCvSharp.Dnn;
+
+public class SingleSceneController : MonoBehaviour
 {
-    // public ImageSynthesis synth;
-    // public GameObject[] prefabs;
-    // public GameObject[] cadPictures;
-    // public SampleCountController count;
-    // public bool saveImg = false;
+    public ImageSynthesis synth;
+    public GameObject cadObj;
+    public GameObject[] prefabs;
+    public SampleCountController count;
+    public enum Actions
+    {
+        none,
+        generate,
+        control,
+        convert
+    };
 
-    // private int minObject;
-    // private int maxObject;
+    public enum Methods
+    {
+        none,
+        manual,
+        random,
+        orb
+    };
+    public Actions action;
+    public Methods method;
+    private int frameCount = 0;
+    private int trainingImages;
+    private int testImages;
+    private int height;
+    private int width;
+    private Vector3 initPos;
+    private Quaternion initRot;
+    private TextWriter tw;
+    private Point2f[] imgPts;
+    private Point3f[] objPts;
+    private string gtKpFile = "captures/GroundTruth/image_groundtruth_img-GT.txt";
+    private int kpLen = 21;
+    private bool generate = false;
+    private bool control = false;
+    private bool convert = false;
 
-    // private int minCADObject;
-    // private int maxCADObject;
-    // private int trainingImages;
-    // private int testImages;
+    private ShapePool pool;
+    
 
-    // private ShapePool pool;
-    // private ShapePool cadPool;
-    // private int frameCount = 0;
-
-    // Vector3[] mesharray;
-
-    // private Camera cam;
-    // private ORB orb;
-    //private WebCamTexture cam;
     // Start is called before the first frame update
     void Start()
     {
-        //Texture2D texture = new Texture2D(Screen.width, Screen.height, TextureFormat.RGB24, false);
 
-        //Mesh holderMesh = new Mesh();
-        //ObjImporter newMesh = new ObjImporter();
-        //holderMesh = newMesh.ImportFile("/home/sourabh/Documents/TU-Berlin/Thesis/Sytheticdata/ml-imagesynthesis/Assets/CADPictures/DMU50.obj");
-        //MeshFilter filter = gameObject.AddComponent<MeshFilter>();
-        //filter.mesh = holderMesh;
-        //Debug.Log($"holderMesh {holderMesh.colors32}");
+        height = Camera.main.pixelHeight;
+        width = Camera.main.pixelWidth;
+        Debug.Log("Height : " + height + "  Width : " + width);
 
+        trainingImages = count.trainingImages;
+        testImages = count.testImages;
 
-        // minObject = count.minObject;
-        // maxObject = count.maxObject;
-        // minCADObject = count.minCADObject;
-        // maxCADObject = count.maxCADObject;
-        // trainingImages = count.trainingImages;
-        // testImages = count.testImages;
+        initPos = cadObj.transform.position;
+        initRot = cadObj.transform.rotation;
 
-        // pool = ShapePool.create(prefabs);
-        // cadPool = ShapePool.create(cadPictures);
+        decideAction();
+        decideMethod();
 
-        // mesharray = new Vector3[maxCADObject];
+        if (generate)
+        {
+            if (method == Methods.manual)
+            {
+                tw = new StreamWriter(gtKpFile);
+            }
+
+            var mesh = cadObj.GetComponent<MeshCollider>().sharedMesh;
+            var vertices3D = mesh.vertices;
+            var normal3D = mesh.triangles;
+
+            TextWriter vertices = new StreamWriter("captures/GroundTruth/image_groundtruth_img-vertices.txt");
+            for (int i = 0; i < vertices3D.Length; i++) 
+                {
+                    Vector3 v =  cadObj.transform.rotation * vertices3D[i];
+                    v = Vector3.Scale(v , cadObj.transform.localScale); 
+                    
+                    vertices.WriteLine(v.x + ", " + v.y + ", " +v.z);
+                }
+            Debug.Log($"vertices saved");
+            vertices.Flush();
+
+            TextWriter faces = new StreamWriter("captures/GroundTruth/image_groundtruth_img-faces.txt");
+            for (int i = 0; i < normal3D.Length; i=i+3) 
+                {
+                    faces.WriteLine(normal3D[i] + ", " + normal3D[i+1] + ", " +normal3D[i+2]);
+                }
+            faces.Flush();
+        }
+        else if (control || convert)
+        {
+            pool = ShapePool.create(prefabs);
+            string[] lines = File.ReadAllLines(gtKpFile);
+
+            kpLen = lines.Length;
+            if (kpLen < 2)
+            {
+                throw new Exception("Minimum 2 Keypoints need to be generated, try action Generate");
+            }
+
+            int i = 0;
+
+            imgPts = new Point2f[kpLen];
+            objPts = new Point3f[kpLen];
+
+            string[] spearator = { "(", ", ", ") : (", ")", ":" };
+            foreach (var l in lines)
+            {
+                string[] c = l.Split(spearator, StringSplitOptions.RemoveEmptyEntries);
+                //Debug.Log($"length {c.Length}");
+                //Debug.Log($"lines  : {c[0]} {c[1]} {c[2]} {c[3]} {c[4]}");
+                imgPts[i] = new Point2f(float.Parse(c[0]), float.Parse(c[1]));
+                objPts[i] = new Point3f(float.Parse(c[2]), float.Parse(c[3]), float.Parse(c[4]));
+                i++;
+            }
+            //synth.PointAndPnP(imgPts, objPts);
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
-        // cam = GetComponent<Camera>();
-        // if (frameCount < trainingImages + testImages)
-        // {
-        //     Debug.Log($"save count {frameCount}");
-        //     if (frameCount % 10 == 0)
-        //     {
-        //         generateCADObjects();
-        //         //generate3DObjects();
-                
-        //         //draw(cam);
-                
-        //         //Debug.Log($"FrameCount {frameCount}");
-        //     }
-        //     frameCount++;
-        //     if (saveImg)
-        //     {
-        //         if (frameCount < trainingImages)
-        //         {
-        //             string filename = $"image_{frameCount.ToString().PadLeft(5, '0')}";
-        //             synth.Save(mesharray, this.GetComponent<Collider>().bounds, filename, 1024, 768, "captures/Train", true);
-        //         }
-        //         else if (frameCount < trainingImages + testImages)
-        //         {
-        //             int testFrameCount = frameCount - trainingImages;
-        //             string filename = $"image_{testFrameCount.ToString().PadLeft(5, '0')}";
-        //             synth.Save(mesharray, this.GetComponent<Collider>().bounds, filename, 512, 512, "captures/Test", true);
-        //         }
-        //     }
-        // }
-        // else
-        // {
-        //     // Pause the application after completion of data generation.
-        //     Debug.Break();
-        // }
+        if (generate)
+        {
+
+            if (method == Methods.manual)
+            {
+                if (frameCount == 0)
+                {
+                    synth.Save(new Vector3[0], cadObj.GetComponent<Collider>().bounds, "image_groundtruth", width, height, "captures/GroundTruth", true, true);
+                }
+
+                if (Input.GetMouseButtonDown(0))
+                {
+                    Vector3 mFar = new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.farClipPlane);
+                    Vector3 mNear = new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.nearClipPlane);
+
+                    Vector3 mousePosF = Camera.main.ScreenToWorldPoint(mFar);
+                    Vector3 mousePosN = Camera.main.ScreenToWorldPoint(mNear);
+
+                    Debug.DrawRay(mousePosN, mousePosF - mousePosN, Color.green);
+
+                    RaycastHit hit;
+
+                    if (Physics.Raycast(mousePosN, mousePosF - mousePosN, out hit))
+                    {
+                        //Debug.Log($"hit.point {hit.point}  WorldToScreenPoint(hit.point) {Camera.main.WorldToScreenPoint(hit.point)} hit.transform.position {hit.transform.position} object.position {hit.point - hit.transform.position}");
+                        Debug.Log($"Point3D {hit.point}  :  Point2D {Input.mousePosition} ");
+                        tw.WriteLine("(" + Input.mousePosition.x + ", " + Input.mousePosition.y + ") : " + (hit.point - hit.transform.position));
+                    }
+                    tw.Flush();
+                }
+            }
+            else if (method == Methods.orb)
+            {
+                if (frameCount == 0)
+                {
+                    synth.Save(new Vector3[0], cadObj.GetComponent<Collider>().bounds, "image_groundtruth", width, height, "captures/GroundTruth", true, false);
+                }
+            }
+        }
+        else
+        {
+            string folder = "captures/";
+            string filename = $"image_{frameCount.ToString().PadLeft(5, '0')}";
+
+            if (control)
+            {
+                if (frameCount < trainingImages)
+                {
+                    folder = folder + "Train";
+                    createAndSave(folder, filename);
+                }
+            }
+            else if (convert)
+            {
+                if (frameCount < testImages)
+                {
+                    folder = folder + "Test";
+                    createAndSave(folder, filename);
+                }
+            }
+        }
+        frameCount++;
     }
 
-    // void generateCADObjects()
-    // {
-    //     // Marking all the object as Incative.
-    //     cadPool.reclaimAll();
-    //     // number of object need to be instantiated
-    //     int objectCount = Random.Range(minCADObject, maxCADObject);
-    //     // pick random cad picture
-    //     for (int i = 0; i < objectCount; i++)
-    //     {
-    //         int cadIndex = Random.Range(0, cadPictures.Length);
+    private void createAndSave(string folder, string filename)
+    {
+        generate3DObjects();
+        Vector3[] transformedObjPoints = transformCADObject();
+        Bounds objBound = cadObj.GetComponent<Collider>().bounds;
 
-    //         // position
-    //         float newX, newY, newZ;
-    //         newX = Random.Range(0.0f, 20.0f);
-    //         newY = Random.Range(10.0f, 10.5f);
-    //         newZ = Random.Range(0.0f, 20.0f);
+        //Debug.Log($" Parameters : {folder} {filename} {control}");
+        synth.Save(transformedObjPoints, objBound, filename, width, height, folder, true, control);
+    }
 
-    //         Vector3 newPosition = new Vector3(newX, newY, newZ);
-    //         // Rotation
-    //         var newRot = Random.rotation;
-    //         // Instantiate new Object from the pool.
-    //         var shape = cadPool.get(cadIndex);
-    //         var newObj = shape.obj;
+    private Vector3[] transformCADObject()
+    {
+        // position
+        float newX, newY, newZ;
+        newX = UnityEngine.Random.Range(-5.0f, 5.0f);
+        newY = UnityEngine.Random.Range(0.0f, -5.0f);
+        newZ = UnityEngine.Random.Range(0.0f, 5.0f);
 
-    //         newObj.transform.position = newPosition;
-    //         //newObj.transform.rotation = newRot;
-    //         //Debug.Log($"newObj.transform.position : {cam.ViewportToWorldPoint(newObj.transform.position)}");
-    //         // color
-    //         float newRed, newBlue, newGreen;
+        Vector3 newPosition = new Vector3(newX, newY, newZ);
+        // Rotation
+        var newRot = Quaternion.Euler(0, UnityEngine.Random.Range(-180, 180), 0);
+        //Debug.Log($"initPos  {initPos}");
+        cadObj.transform.position = initPos - newPosition;
+        cadObj.transform.rotation = newRot * initRot;
 
-    //         newRed = Random.Range(0.0f, 1.0f);
-    //         newBlue = Random.Range(0.0f, 1.0f);
-    //         newGreen = Random.Range(0.0f, 1.0f);
+        Vector3[] transformedObjPoints = new Vector3[kpLen];
+        int i = 0;
+        foreach (var p3D in objPts)
+        {
+            //Vector3 obj = newRot * (new Vector3(p3D.X, p3D.Y, p3D.Z) - cadObj.transform.position) + cadObj.transform.position;
+            Vector3 obj = new Vector3(p3D.X, p3D.Y, p3D.Z);
+            // Apply same rotation to points as object
+            obj = newRot * obj;
+            // Apply same transaltion to points as object
+            obj = obj + initPos - newPosition;
+            //Debug.Log($"obj after {obj}");
+            transformedObjPoints[i] = obj;
+            i++;
+        }
+        Debug.Log($"PoBJECT TRANSFORME ");
+        synth.OnSceneChange();
+        return transformedObjPoints;
+    }
 
-    //         var newColor = new Color(newRed, newBlue, newGreen);
+    void generate3DObjects()
+    {
+        pool.reclaimAll();
+        int objectCount = UnityEngine.Random.Range(count.minObject, count.maxObject);
+        // pick random prefab
+        for (int i = 0; i < objectCount; i++)
+        {
+            int prefabIndex = UnityEngine.Random.Range(0, prefabs.Length);
 
-    //         newObj.GetComponent<Renderer>().material.color = newColor;
+            // position
+            float newX, newY, newZ;
+            newX = UnityEngine.Random.Range(-30.0f, 30.0f);
+            newY = UnityEngine.Random.Range(2.0f, 10.0f);
+            newZ = UnityEngine.Random.Range(-30.0f, 30.0f);
 
-    //         // Mesh mesh  = newObj.GetComponent<MeshFilter>().mesh;
-    //         // Vector3[] v = mesh.vertices;
+            Vector3 newPosition = new Vector3(newX, newY, newZ);
+            // Rotation
+            var newRot = UnityEngine.Random.rotation;
+            // Instantiate new Object from the pool.
+            var shape = pool.get(prefabIndex);
+            var newObj = shape.obj;
 
-    //         // Mat cadMat = new Mat(cam.pixelHeight, cam.pixelWidth, MatType.CV_8UC4, v);
+            newObj.transform.position = newPosition;
+            newObj.transform.rotation = newRot;
 
-    //         // mesharray[i] = cadMat;
-    //         // //Debug.Log($"vertices MAT : {cadMat.Size()}");
-    //         // //Debug.Log($"Mesh count {v}");
-    //         // foreach (var vt in v)
-    //         // {
-    //         //     Debug.Log($"mesh : {mesh.name} : vertices : {vt} -> {cam.WorldToScreenPoint(transform.TransformPoint(vt))}");
-    //         // }
-            
-    //     }
-    //     synth.OnSceneChange();
-    // }
+            //scale
+            float sx = UnityEngine.Random.Range(5f, 10.0f);
+            Vector3 newScale = new Vector3(sx, sx, sx);
 
-    // public Texture2D MatToTexture(Mat mat, Texture2D outTexture = null)
-    // {
-    //     Size size = mat.Size();
-        
-    //     if (null == outTexture || outTexture.width != size.Width || outTexture.height != size.Height)
-    //         Debug.Log($"outTexture {outTexture.width} : {size.Width}");
-    //         outTexture = new Texture2D(size.Width, size.Height, TextureFormat.RGBA32, false);
+            newObj.transform.localScale = newScale;
 
-    //     int count = size.Width * size.Height;
-    //     Color32Bytes data = new Color32Bytes();
-    //     data.byteArray = new byte[count * 4];
-    //     data.colors = new Color32[count];
-    //     Marshal.Copy(mat.Data, data.byteArray, 0, data.byteArray.Length);
-    //     outTexture.LoadRawTextureData(data.byteArray);
-    //     //outTexture.SetPixels32(data.colors);
-    //     outTexture.Apply();
+            // color
+            float newRed, newBlue, newGreen;
 
-    //     return outTexture;
-        
-    // }
+            newRed = UnityEngine.Random.Range(0.0f, 1.0f);
+            newBlue = UnityEngine.Random.Range(0.0f, 1.0f);
+            newGreen = UnityEngine.Random.Range(0.0f, 1.0f);
 
-    // void generate3DObjects()
-    // {
-    //     pool.reclaimAll();
-    //     int objectCount = Random.Range(minObject, maxObject);
-    //     // pick random prefab
-    //     for (int i = 0; i < objectCount; i++)
-    //     {
-    //         int prefabIndex = Random.Range(0, prefabs.Length);
+            var newColor = new Color(newRed, newBlue, newGreen);
+        }
+        synth.OnSceneChange();
+    }
 
-    //         // position
-    //         float newX, newY, newZ;
-    //         newX = Random.Range(-30.0f, 30.0f);
-    //         newY = Random.Range(2.0f, 10.0f);
-    //         newZ = Random.Range(-30.0f, 30.0f);
+    private void decideAction()
+    {
+        if (Actions.none == action)
+        {
+            Debug.Break();
+            throw new Exception("Action can not be None");
+        }
+        else if (Actions.generate == action)
+        {
+            generate = true;
+        }
+        else if (Actions.control == action)
+        {
+            control = true;
+        }
+        else if (Actions.convert == action)
+        {
+            convert = true;
+        }
+    }
 
-    //         Vector3 newPosition = new Vector3(newX, newY, newZ);
-    //         // Rotation
-    //         var newRot = Random.rotation;
-    //         // Instantiate new Object from the pool.
-    //         var shape = pool.get(prefabIndex);
-    //         var newObj = shape.obj;
-
-    //         newObj.transform.position = newPosition;
-    //         newObj.transform.rotation = newRot;
-
-    //         //scale
-    //         float sx = Random.Range(5f, 10.0f);
-    //         Vector3 newScale = new Vector3(sx, sx, sx);
-
-    //         newObj.transform.localScale = newScale;
-
-    //         // color
-    //         float newRed, newBlue, newGreen;
-
-    //         newRed = Random.Range(0.0f, 1.0f);
-    //         newBlue = Random.Range(0.0f, 1.0f);
-    //         newGreen = Random.Range(0.0f, 1.0f);
-
-    //         var newColor = new Color(newRed, newBlue, newGreen);
-    //     }
-    //     synth.OnSceneChange();
-    // }
-
-    
-    //[DllImport("liborb2")]
-    //public static extern void run(Mat img, int sigma);
-
-    //[DllImport("liborb2")]
-    //public static extern void showImage(Mat img, char win, int wait, bool show, bool save);
-
-   
-
+    private void decideMethod()
+    {
+        if (Actions.generate == action && method == Methods.none)
+        {
+            Debug.Break();
+            throw new Exception("If action in Generate then method should not be none");
+        }
+        else if (Actions.generate != action && method != Methods.none)
+        {
+            Debug.Break();
+            throw new Exception("Method should only be set with Action Generated");
+        }
+    }
 }
-
-
-

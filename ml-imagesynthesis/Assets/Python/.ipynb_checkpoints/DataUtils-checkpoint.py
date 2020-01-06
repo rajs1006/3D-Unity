@@ -196,12 +196,14 @@ class InverseTransform(object):
     def __call__(self, sample):
         key_pts, crop, scale = sample['output_pts'], sample['crop'], sample['scale']
          
+        key_pts = key_pts.data.numpy()    
+        key_pts = np.squeeze(key_pts)
+            
         crop = crop.data.numpy()
-        key_pts = key_pts.data.numpy()
         scale = scale.data.numpy()
         
-        key_pts = np.squeeze(key_pts)
-        key_pts = (key_pts*50.0)+100
-        key_pts = (key_pts + crop)/scale
+        ##Initial seq is scaling, croping, normalizing amd so in reverse order here
+        key_pts = (key_pts*50.0)+100 # Reverse normalizing
+        key_pts = (key_pts + crop)/scale # reverse crop and then scaling
         
         return key_pts
